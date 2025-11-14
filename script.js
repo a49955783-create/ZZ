@@ -1,83 +1,100 @@
-// شاشة الانترو
-window.onload = () => {
-  let progress = document.getElementById("progress");
-  let percent = 0;
-  let interval = setInterval(() => {
-    percent += 2;
-    progress.style.width = percent + "%";
-    if (percent >= 100) {
-      clearInterval(interval);
-      document.getElementById("intro-screen").style.display = "none";
-      document.getElementById("main-content").style.display = "block";
+//========================
+// 1) الانترو
+//========================
+setTimeout(() => {
+    document.getElementById("intro").style.display = "none";
+    document.getElementById("main").style.display = "block";
+}, 1800);
+
+//========================
+// 2) إضافة سطر جديد
+//========================
+function addRow(code = "", status = "", location = "", units = "") {
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+        <td><input value="${code}"></td>
+        <td>
+            <select>
+                <option>متاح</option>
+                <option>مشغول</option>
+                <option>الهلي</option>
+                <option>بوليتو</option>
+                <option>خارج الخدمة</option>
+            </select>
+        </td>
+        <td><input value="${location}"></td>
+        <td><input value="${units}"></td>
+        <td><button class="edit">تعديل</button></td>
+        <td><button class="partner">إضافة شريك</button></td>
+        <td><button class="delete">حذف</button></td>
+    `;
+
+    document.getElementById("tableBody").appendChild(tr);
+
+    tr.querySelector(".delete").onclick = () => tr.remove();
+    tr.querySelector(".edit").onclick = () => alert("تم تفعيل وضع التعديل");
+    tr.querySelector(".partner").onclick = () => alert("إضافة شريك...");
+}
+
+document.getElementById("addRow").onclick = () => addRow();
+
+//========================
+// 3) OCR بتحسين + توزيع مباشر للكود فقط
+//========================
+document.getElementById("startOCR").onclick = async () => {
+    const file = document.getElementById("ocrImage").files[0];
+    if (!file) return alert("الرجاء اختيار صورة");
+
+    document.getElementById("progress-container").style.display = "block";
+
+    const worker = await Tesseract.createWorker("ara+eng", 1, {
+        logger: m => {
+            if (m.progress) {
+                document.getElementById("progress-bar").style.width = (m.progress * 100) + "%";
+                document.getElementById("progress-text").innerText = Math.floor(m.progress * 100) + "%";
+            }
+        }
+    });
+
+    const { data } = await worker.recognize(file);
+    await worker.terminate();
+
+    let text = data.text;
+
+    // استخراج الأكواد فقط
+    const codes = text.match(/\b\d{3,5}\b/g) || [];
+
+    const mode = document.querySelector("input[name='mode']:checked").value;
+
+    if (mode === "replace") {
+        document.getElementById("tableBody").innerHTML = "";
     }
-  }, 50);
+
+    codes.forEach(code => addRow(code, "", "", ""));
+
+    alert("تم توزيع الأكواد مباشرة!");
 };
 
-const imageInput = document.getElementById('imageInput');
-const extractBtn = document.getElementById('extractBtn');
-const mergeBtn = document.getElementById('mergeBtn');
-const resetBtn = document.getElementById('resetBtn');
-const tableBody = document.querySelector('#dataTable tbody');
-const alerts = document.getElementById('alerts');
+//========================
+// 4) النتيجة النهائية
+//========================
+document.getElementById("showResult").onclick = () => {
+    let output = "";
 
-function addAlert(msg, type="info") {
-  alerts.innerHTML = `<div class="alert ${type}">${msg}</div>`;
-  setTimeout(() => alerts.innerHTML = "", 3000);
-}
+    document.querySelectorAll("#tableBody tr").forEach(row => {
+        const tds = row.querySelectorAll("td");
+        output += `${tds[0].querySelector("input").value} | ${tds[1].querySelector("select").value} | ${tds[2].querySelector("input").value} | ${tds[3].querySelector("input").value}\n`;
+    });
 
-// إضافة سطر جديد
-document.getElementById('addRowBtn').addEventListener('click', () => {
-  const row = createRow();
-  tableBody.appendChild(row);
-});
+    document.getElementById("finalOutput").value = output;
+};
 
-// إنشاء صف جديد
-function createRow(data = {}) {
-  const row = document.createElement('tr');
-  row.innerHTML = `
-    <td contenteditable="true">${data.code || ""}</td>
-    <td contenteditable="true">${data.location || ""}</td>
-    <td contenteditable="true">${data.status || ""}</td>
-    <td contenteditable="true">${data.unit || ""}</td>
-    <td contenteditable="true">${data.start || ""}</td>
-    <td contenteditable="true">${data.end || ""}</td>
-    <td>
-      <button class="edit">تعديل</button>
-      <button class="delete">حذف</button>
-    </td>`;
-  row.querySelector('.delete').onclick = () => row.remove();
-  row.querySelector('.edit').onclick = () => addAlert("تم فتح تعديل الصف.");
-  return row;
-}
+//========================
+// 5) الوقت
+//========================
+document.getElementById("startTime").onclick = () =>
+    alert("تم تسجيل وقت بدء الاستلام");
 
-// OCR استخراج النص وتوزيعه
-extractBtn.addEventListener('click', async () => {
-  const file = imageInput.files[0];
-  if (!file) return addAlert("يرجى اختيار صورة أولاً", "error");
-
-  addAlert("جارٍ استخراج النص...");
-  const { data } = await Tesseract.recognize(file, 'ara+eng', {
-    logger: info => console.log(info)
-  });
-
-  let lines = data.text.split('\n').filter(l => l.trim() !== "");
-  lines.forEach(line => {
-    let row = createRow();
-    // توزيع الأرقام فقط في خانة الكود
-    if (/^\d+$/.test(line.trim())) row.cells[0].innerText = line.trim();
-    else row.cells[2].innerText = line.trim(); // الحالة
-    tableBody.appendChild(row);
-  });
-  addAlert("تم استخراج النص وتوزيعه بنجاح ✅");
-});
-
-// دمج واستبدال
-mergeBtn.addEventListener('click', () => {
-  addAlert("تم الدمج والاستبدال بنجاح ✅");
-});
-
-// إعادة ضبط
-resetBtn.addEventListener('click', () => {
-  tableBody.innerHTML = "";
-  addAlert("تم مسح الجدول.");
-});
+document.getElementById("endTime").onclick = () =>
+    alert("تم تسجيل وقت إنهاء الاستلام");
