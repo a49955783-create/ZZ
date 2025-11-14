@@ -1,80 +1,69 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام العمليات - النسخة الكاملة</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css">
+
+    <!-- مكتبة OCR - Tesseract.js المحلي -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
+
 <body>
 
-<!-- شاشة الانترو -->
+<!-- ===================== شاشة الانترو ===================== -->
 <div id="intro">
-    <h1 class="intro-title">نظام العمليات</h1>
-    <p class="intro-sub">جارٍ التحميل...</p>
-    <div class="loader"></div>
+    <div class="intro-box">
+        <h1>نظام العمليات</h1>
+        <p>جارٍ التحميل...</p>
+        <div class="loader"></div>
+    </div>
 </div>
 
-<!-- الصفحة الرئيسية -->
-<div id="main" style="display:none">
+<!-- ===================== الصفحة الرئيسية ===================== -->
+<div id="app" style="display:none;">
 
-    <h2 class="title">لوحة التحكم</h2>
+    <h2 class="title">📋 لوحة العمليات</h2>
 
     <!-- رفع صورة OCR -->
     <div class="upload-box">
-        <input type="file" id="ocrImage" accept="image/*">
-        <button id="startOCR">استخراج النص الآن</button>
+        <label class="upload-btn">
+            اختر صورة
+            <input type="file" id="imageInput" accept="image/*">
+        </label>
+        <p class="note">يفضل رفع صورة واضحة. سيتم توزيع الأكواد مباشرة.</p>
 
-        <div class="control-box">
-            <label>
-                <input type="radio" name="mode" value="replace" checked>
-                استبدال
-            </label>
-            <label>
-                <input type="radio" name="mode" value="merge">
-                دمج
-            </label>
-        </div>
-
-        <p class="note">يفضل رفع/لصق صورة عالية الجودة. أحيانًا ستحتاج لتعديل النتائج يدويًا قبل الإرسال.</p>
+        <progress id="ocrProgress" value="0" max="100"></progress>
+        <p id="ocrStatus"></p>
     </div>
 
-    <div id="progress-container">
-        <div id="progress-text">0%</div>
-        <div id="progress-bar"></div>
-    </div>
-
-    <!-- القائمة الرئيسية -->
-    <table id="dataTable">
+    <!-- جدول الأكواد -->
+    <table id="codesTable">
         <thead>
             <tr>
                 <th>الكود</th>
                 <th>الحالة</th>
                 <th>الموقع</th>
                 <th>توزيع الوحدات</th>
-                <th>تعديل</th>
-                <th>إضافة شريك</th>
-                <th>حذف</th>
+                <th>إجراءات</th>
             </tr>
         </thead>
-        <tbody id="tableBody"></tbody>
+        <tbody id="codesBody">
+
+        </tbody>
     </table>
 
-    <button id="addRow">إضافة سطر جديد</button>
+    <button id="addRow">➕ إضافة سطر جديد</button>
 
-    <!-- الأزرار الإضافية -->
-    <div class="extra-buttons">
-        <button id="startTime">بدء الاستلام</button>
-        <button id="endTime">إنهاء الاستلام</button>
-        <button id="showResult">إظهار النتيجة النهائية</button>
-    </div>
+    <hr>
 
-    <textarea id="finalOutput" placeholder="النتيجة النهائية تظهر هنا..."></textarea>
+    <!-- النتيجة النهائية -->
+    <h3>📌 النتيجة النهائية:</h3>
+    <textarea id="finalResult"></textarea>
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="script.js"></script>
-
 </body>
 </html>
